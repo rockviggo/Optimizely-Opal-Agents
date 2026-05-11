@@ -122,8 +122,7 @@
 
 
 ///HTML///
-
-Årshjul – Agent-tilpasset mal.html
+///lagre HTML som fil og kall den "Årshjul – Agent-tilpasset mal.html" og referer til den i Agent///
 
 <!DOCTYPE html>
 <html lang="no">
