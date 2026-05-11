@@ -118,3 +118,837 @@
   "system_prompt_template": "You are a conversational agent interacting with a user.\n\nThe user can ask follow-up questions and you should respond in context of the ongoing conversation. Use the conversation history to maintain continuity across turns.\n\nImportant guidelines:\n- Stay within the scope of your defined capabilities and the tools available to you.\n- If a question is outside your area of expertise or capabilities, clearly say so rather than guessing or making up information.\n- Do not hallucinate facts, data, or capabilities you don't have.\n- If you need more information from the user to provide a good answer, ask for it.\n- Use the tools provided to you when they can help answer the user's question accurately.",
   "enable_auto_tool_prediction": true
 }
+
+
+
+///HTML///
+
+BI Årshjul – Agent-tilpasset mal.html
+
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI Årshjul [[YEAR]]</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ===== DESIGN TOKENS (dark theme, aligned with skeleton variable naming) ===== */
+:root {
+  --color-bg: #0f172a;
+  --color-surface: rgba(30,41,59,0.7);
+  --color-text: #e2e8f0;
+  --color-muted: #94a3b8;
+  --color-muted-dim: #64748b;
+  --color-line: rgba(100,116,139,0.2);
+  --color-accent: #6366f1;
+  --color-accent-mid: #818cf8;
+  --color-accent-light: #a5b4fc;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 20px; --space-5: 32px;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--color-bg); color: var(--color-text); font-size: 14px; line-height: 1.5; padding: 24px; }
+
+/* ===== HEADER (skeleton: header.wheel-header) ===== */
+header.wheel-header {
+  max-width: 1200px; margin: 0 auto var(--space-4);
+  display: flex; align-items: center; gap: 12px;
+}
+header.wheel-header .logo {
+  width: 36px; height: 36px; background: var(--color-accent);
+  border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+header.wheel-header h1 { font-size: 20px; font-weight: 700; color: white; margin: 0; }
+header.wheel-header h1 .badge { color: var(--color-accent-light); font-size: 13px; font-weight: 500; margin-left: 8px; }
+header.wheel-header .view-name { display: block; color: var(--color-muted); font-size: 12px; margin-top: 2px; }
+
+/* ===== FILTER TOOLBAR (skeleton: .filter-toolbar) ===== */
+.filter-toolbar {
+  max-width: 1200px; margin: 0 auto var(--space-4);
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line); backdrop-filter: blur(12px); padding: 16px;
+}
+.filter-groups { display: flex; flex-wrap: wrap; gap: 24px; }
+.filter-group {}
+.filter-group-label {
+  font-size: 10px; font-weight: 600; color: var(--color-muted-dim);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+}
+.filter-group-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.fb {
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all .15s; border: none; user-select: none; line-height: 1.4;
+}
+.fb.active { box-shadow: 0 0 0 1.5px var(--color-bg), 0 0 0 3px currentColor; }
+.fb:hover { opacity: .8; }
+.cnt {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  font-size: 10px; font-weight: 700; margin-left: 3px;
+}
+.filter-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 8px; margin-top: 12px; border-top: 1px solid rgba(100,116,139,0.3);
+}
+.filter-summary p { font-size: 12px; color: var(--color-muted-dim); }
+.filter-summary .count { font-weight: 700; color: var(--color-muted); }
+.filter-summary button {
+  font-size: 11px; color: var(--color-accent-light); font-weight: 600;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+}
+.filter-summary button:hover { color: #c4b5fd; }
+
+/* ===== WHEEL HINT ===== */
+.wheel-hint { text-align: center; max-width: 1200px; margin: 0 auto var(--space-3); }
+@keyframes pulse-hint { 0%,100%{opacity:.5;} 50%{opacity:1;} }
+.hint-pulse { animation: pulse-hint 2.5s ease-in-out infinite; font-size: 12px; color: var(--color-muted-dim); }
+
+/* ===== WHEEL SHELL (skeleton: .wheel-shell) ===== */
+.wheel-shell {
+  max-width: 1200px; margin: 0 auto var(--space-4);
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line); backdrop-filter: blur(12px);
+  padding: var(--space-5); display: flex; justify-content: center;
+  position: relative; overflow: hidden;
+}
+#wheelInner { position: relative; width: 780px; height: 780px; }
+.task-dot {
+  position: absolute; border-radius: 50%; cursor: pointer;
+  transition: all .3s ease; z-index: 10;
+}
+.task-dot:hover { transform: scale(1.6); z-index: 50; }
+.task-dot.dimmed { opacity: .07; transform: scale(.5); pointer-events: none; }
+.month-label-link {
+  position: absolute; cursor: pointer; z-index: 6; text-decoration: none;
+  transition: all .2s; border-radius: 6px; padding: 2px 6px;
+}
+.month-label-link:hover { background: rgba(99,102,241,0.15); }
+.month-label-link:hover .ml-text { color: var(--color-accent-light) !important; }
+.month-label-link:hover .ml-count { opacity: 1 !important; }
+.month-hit {
+  position: absolute; cursor: pointer; z-index: 5; opacity: 0; transition: opacity .2s;
+}
+.month-hit:hover { opacity: 0.08; background: white; }
+
+/* ===== HOVER CARD (skeleton: .hover-card / tooltip) ===== */
+.hover-card {
+  position: absolute; pointer-events: none;
+  background: #1e293b; border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-size: 11px; display: none; max-width: 260px;
+  white-space: normal; line-height: 1.4; z-index: 100; color: white;
+}
+.hover-card.show { display: block; }
+
+/* ===== LEGEND (skeleton: .legend) ===== */
+.legend {
+  max-width: 1200px; margin: 0 auto var(--space-4);
+  display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3);
+  background: var(--color-surface); border-radius: var(--radius-md);
+  border: 1px solid var(--color-line); backdrop-filter: blur(12px);
+}
+.legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--color-text);
+}
+.legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+/* ===== SKIPPED PANEL (skeleton: .skipped-panel) ===== */
+.skipped-panel {
+  max-width: 1200px; margin: 0 auto var(--space-4);
+  border: 1px solid var(--color-line); border-radius: var(--radius-md); overflow: hidden;
+}
+.skipped-panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.skipped-panel caption {
+  text-align: left; padding: var(--space-3); background: var(--color-surface);
+  font-weight: 650; border-bottom: 1px solid var(--color-line); color: var(--color-text);
+}
+.skipped-panel th, .skipped-panel td {
+  padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--color-line);
+}
+.skipped-panel thead th {
+  background: var(--color-surface); font-size: 11px;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted);
+}
+.skipped-panel tbody td { color: var(--color-text); }
+.empty-row td { text-align: center; color: var(--color-muted); font-style: italic; padding: var(--space-4); }
+
+/* ===== FOOTER (skeleton: footer.wheel-footer) ===== */
+footer.wheel-footer {
+  max-width: 1200px; margin: 0 auto;
+  padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-line);
+  font-size: 12px; color: var(--color-muted-dim);
+  display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between;
+}
+
+/* ===== ZOOM OVERLAY ===== */
+#zoomOverlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 200; display: none; opacity: 0; transition: opacity .4s ease;
+}
+#zoomOverlay.show { display: flex; opacity: 1; }
+#zoomBg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15,23,42,0.92); backdrop-filter: blur(16px);
+}
+#zoomContent {
+  position: relative; z-index: 1; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; padding: 20px;
+}
+#zoomHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; max-width: 1100px; margin-bottom: 16px;
+}
+#zoomClose {
+  background: rgba(100,116,139,0.3); border: 1px solid rgba(148,163,184,0.3);
+  color: var(--color-text); border-radius: var(--radius-md); padding: 8px 20px;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit;
+}
+#zoomClose:hover { background: rgba(100,116,139,0.5); }
+#zoomCanvas { position: relative; flex: 1; width: 100%; max-width: 1100px; }
+#zoomSvg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.zoom-popup {
+  position: absolute; border-radius: var(--radius-md); padding: 10px 14px;
+  font-size: 12px; font-weight: 500; line-height: 1.5; z-index: 4;
+  pointer-events: auto; max-width: 240px;
+  border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.zoom-dot {
+  position: absolute; border-radius: 50%; z-index: 5;
+  box-shadow: 0 0 12px rgba(255,255,255,0.2);
+}
+.badge-sm {
+  display: inline-block; padding: 1px 6px; border-radius: 6px;
+  font-size: 9px; font-weight: 700; margin-left: 4px; vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  .filter-groups { gap: 12px; }
+  .wheel-shell { padding: var(--space-3); }
+  #wheelInner { width: 100%; height: auto; aspect-ratio: 1; }
+  footer.wheel-footer { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER (skeleton: header.wheel-header) ===== -->
+<header class="wheel-header">
+  <div class="logo">BI</div>
+  <div>
+    <h1>Årshjul <span id="yearDisplay"></span> <span class="badge">Eksperimentell</span></h1>
+    <span class="view-name" id="viewName"></span>
+  </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main>
+
+  <!-- Filter toolbar (skeleton: section.filter-toolbar) — built by JS from config -->
+  <section class="filter-toolbar" aria-label="Årshjul-filtre" id="filterToolbar"></section>
+
+  <!-- Wheel hint -->
+  <div class="wheel-hint">
+    <p class="hint-pulse">Klikk på en måned i hjulet for mer informasjon</p>
+  </div>
+
+  <!-- Wheel (skeleton: section.wheel-shell) — Canvas-based, interactive -->
+  <section class="wheel-shell" aria-label="Årshjul-diagram" id="wheelWrap">
+    <div id="wheelInner">
+      <canvas id="wc" width="780" height="780" style="position:absolute;top:0;left:0;"
+              role="img" aria-label="Årlig kampanje- og oppgavehjul"></canvas>
+      <div id="dots"></div>
+      <div id="tips"></div>
+      <div id="hitAreas"></div>
+      <div id="monthLinks"></div>
+    </div>
+  </section>
+
+  <!-- Legend (skeleton: section.legend) — built by JS from config -->
+  <section class="legend" aria-label="Kategoriforklaring" id="legendSection">
+    <span class="legend-item">Ingen kategorier å vise</span>
+  </section>
+
+  <!-- Skipped panel (skeleton: section.skipped-panel) -->
+  <section class="skipped-panel" aria-label="Elementer som ikke ble plassert" id="skippedSection">
+    <table>
+      <caption>Elementer som ikke ble plassert</caption>
+      <thead><tr><th scope="col">Tittel</th><th scope="col">Årsak</th></tr></thead>
+      <tbody id="skippedBody">
+        <tr class="empty-row"><td colspan="2">Alle elementer er plassert i hjulet</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<!-- ===== FOOTER (skeleton: footer.wheel-footer) ===== -->
+<footer class="wheel-footer">
+  <span>Oppgaver plassert: <strong id="totalPlaced">0</strong></span>
+  <span>Totalt: <strong id="totalItems">0</strong></span>
+  <span>Generert <span id="footerTimestamp"></span></span>
+</footer>
+
+<!-- ===== ZOOM OVERLAY ===== -->
+<div id="zoomOverlay">
+  <div id="zoomBg" onclick="closeZoom()"></div>
+  <div id="zoomContent">
+    <div id="zoomHeader">
+      <div>
+        <h2 style="font-size:24px;font-weight:700;color:white;margin:0" id="zoomTitle"></h2>
+        <p style="font-size:14px;color:var(--color-muted);margin-top:4px" id="zoomSub"></p>
+      </div>
+      <button id="zoomClose" onclick="closeZoom()">Tilbake til årshjulet</button>
+    </div>
+    <div id="zoomCanvas">
+      <svg id="zoomSvg"></svg>
+      <div id="zoomDots"></div>
+      <div id="zoomPopups"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================================
+ *  AGENT PLACEHOLDER TOKENS
+ *  -------------------------------------------------------------------------
+ *  The agent replaces each [[TOKEN]] with real data before rendering.
+ *  Below, every placeholder is documented with expected format and filled
+ *  with sample data so the template renders correctly as a preview.
+ * =========================================================================== */
+
+/*  [[YEAR]]  —  Four-digit year string, e.g. "2026"                          */
+const YEAR = '2026';
+
+/*  [[SAVED_VIEW_NAME]]  —  Subtitle / description string                     */
+const SAVED_VIEW_NAME = 'Alle planlagte utsendelser fordelt over året, gruppert etter strategisk pilar';
+
+/*  [[TIMESTAMP]]  —  ISO 8601 timestamp, e.g. "2026-05-11T07:53:01Z"         */
+const TIMESTAMP = '2026-05-11T07:53:01Z';
+
+/*  [[TASKS_JSON]]  —  Array of task objects.
+ *  Each object:
+ *    m  : number   — month (1–12)
+ *    t  : string   — display title
+ *    y  : string   — type key  (must match a key in TYPE_CONFIG)
+ *    p  : string   — pilar key (must match a key in PILAR_CONFIG)
+ *    l  : string   — lifecycle key (must match a key in LIFECYCLE_CONFIG)
+ *    k  : string   — channel / tool name
+ *    c  : string   — campus / location
+ */
+const TASKS = [
+  {m:1,t:"Portal - Søknadsguide",y:"admin",p:"rekr",l:"Prospekt",k:"Portal",c:"Oslo"},
+  {m:1,t:"SFMC - Invitasjon Åpen Dag",y:"insp",p:"rekr",l:"Prospekt",k:"SFMC",c:"Oslo"},
+  {m:1,t:"Sosiale Medier - Studentlife Reels",y:"insp",p:"rekr",l:"Prospekt",k:"SoMe",c:"Oslo"},
+  {m:2,t:"SFMC - Hvorfor velge Finans på BI",y:"insp",p:"rekr",l:"Prospekt",k:"SFMC",c:"Oslo"},
+  {m:2,t:"Portal - Kurskalender vår",y:"admin",p:"rekr",l:"Prospekt",k:"Portal",c:"Trondheim"},
+  {m:2,t:"Sosiale Medier - LinkedIn Ads",y:"insp",p:"rekr",l:"Prospekt",k:"SoMe",c:"Stavanger"},
+  {m:3,t:"SFMC - Invitasjon til bedriftsdag",y:"invit",p:"rekr",l:"Prospekt",k:"SFMC",c:"Oslo"},
+  {m:3,t:"SFMC - Kundeintervju video",y:"insp",p:"rekr",l:"Prospekt",k:"SFMC",c:"Oslo"},
+  {m:3,t:"Sosiale Medier - Webinar Teaser",y:"invit",p:"rekr",l:"Prospekt",k:"SoMe",c:"Trondheim"},
+  {m:3,t:"SFMC - SMS Fristpåminnelse",y:"kritisk",p:"rekr",l:"Prospekt",k:"SFMC",c:"Oslo"},
+  {m:4,t:"Canvas - Webinar for nåværende",y:"invit",p:"rekr",l:"Bachelor",k:"Canvas",c:"Bergen"},
+  {m:4,t:"Sosiale Medier - Analyst Insights",y:"insp",p:"rekr",l:"Bachelor",k:"SoMe",c:"Oslo"},
+  {m:4,t:"Portal - Karrieremuligheter Finans",y:"insp",p:"rekr",l:"Bachelor",k:"Portal",c:"Oslo"},
+  {m:4,t:"Canvas - Info til Bachelorstudenter",y:"admin",p:"rekr",l:"Bachelor",k:"Canvas",c:"Oslo"},
+  {m:5,t:"SFMC - Nyhetsbrev Master-fokus",y:"insp",p:"rekr",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:5,t:"SFMC - Takk for deltakelse mail",y:"insp",p:"rekr",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:8,t:"SFMC - Velkomstmail",y:"kritisk",p:"ret",l:"-",k:"SFMC",c:"Oslo"},
+  {m:8,t:"SFMC - SMS Velkommen til Campus",y:"kritisk",p:"ret",l:"-",k:"SFMC",c:"Bergen"},
+  {m:8,t:"Portal - Huskeliste for nye",y:"admin",p:"ret",l:"-",k:"Portal",c:"Stavanger"},
+  {m:8,t:"Canvas - Faglig introduksjon",y:"admin",p:"ret",l:"-",k:"Canvas",c:"Trondheim"},
+  {m:8,t:"Portal - Oversikt over lokaler",y:"admin",p:"ret",l:"Bachelor",k:"Portal",c:"Bergen"},
+  {m:9,t:"Sosiale Medier - Bli med i forening",y:"insp",p:"ret",l:"Bachelor",k:"SoMe",c:"Trondheim"},
+  {m:9,t:"Sosiale Medier - Takeover uke",y:"insp",p:"ret",l:"Bachelor",k:"SoMe",c:"Oslo"},
+  {m:9,t:"Portal - Ressursbank for deg",y:"insp",p:"ret",l:"Bachelor",k:"Portal",c:"Digital"},
+  {m:9,t:"Canvas - Studiefremdrift sjekk",y:"admin",p:"ret",l:"Bachelor",k:"Canvas",c:"Digital"},
+  {m:9,t:"SFMC - SMS Viktige frister online",y:"kritisk",p:"ret",l:"Bachelor",k:"SFMC",c:"Digital"},
+  {m:9,t:"SFMC - Online QA Session",y:"admin",p:"ret",l:"Bachelor",k:"SFMC",c:"Digital"},
+  {m:10,t:"SFMC - Invitasjon til Grillfest",y:"invit",p:"ret",l:"Bachelor",k:"SFMC",c:"Oslo"},
+  {m:10,t:"SFMC - Webinar om studieteknikk",y:"insp",p:"ret",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:10,t:"SFMC - Lykke til SMS",y:"insp",p:"ret",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:11,t:"Portal - FAQ Eksamen",y:"admin",p:"ret",l:"Master",k:"Portal",c:"Trondheim"},
+  {m:11,t:"Canvas - Prøveeksamen melding",y:"admin",p:"ret",l:"Master",k:"Canvas",c:"Bergen"},
+  {m:3,t:"SFMC - Life in Norway Guide",y:"admin",p:"tilf",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:3,t:"Portal - Visa og Housing info",y:"admin",p:"tilf",l:"Master",k:"Portal",c:"Oslo"},
+  {m:4,t:"Portal - CV-kurs ressurser",y:"admin",p:"tilf",l:"Master",k:"Portal",c:"Stavanger"},
+  {m:4,t:"Sosiale Medier - Bedriftspresentasjoner",y:"invit",p:"tilf",l:"Master",k:"SoMe",c:"Oslo"},
+  {m:5,t:"SFMC - SMS Påmelding karrieredag",y:"kritisk",p:"tilf",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:5,t:"SFMC - Nyhetsbrev Jobbmuligheter",y:"insp",p:"tilf",l:"Master",k:"SFMC",c:"Trondheim"},
+  {m:5,t:"SFMC - SMS Buddy match",y:"kritisk",p:"tilf",l:"Master",k:"SFMC",c:"Oslo"},
+  {m:6,t:"Canvas - Kunngjøring undersøkelse",y:"admin",p:"tilf",l:"Bachelor",k:"Canvas",c:"Alle"},
+  {m:6,t:"SFMC - SMS Svar på undersøkelsen",y:"kritisk",p:"tilf",l:"Bachelor",k:"SFMC",c:"Trondheim"},
+  {m:6,t:"SFMC - Nyhetsbrev: Slik ble det",y:"insp",p:"tilf",l:"Bachelor",k:"SFMC",c:"Bergen, Trondheim"},
+  {m:6,t:"Portal - Hva vi endret i år",y:"admin",p:"tilf",l:"Bachelor",k:"Portal / bi.no",c:"Alle"},
+  {m:10,t:"Sosiale Medier - International Night",y:"invit",p:"tilf",l:"Master",k:"SoMe",c:"Bergen"},
+  {m:11,t:"SFMC - Re-skilling tilbud",y:"insp",p:"tilf",l:"Alumni",k:"SFMC",c:"Stavanger"},
+  {m:11,t:"Portal - Alumni-medlemsskap",y:"admin",p:"tilf",l:"Alumni",k:"Portal",c:"Oslo"},
+  {m:11,t:"Sosiale Medier - Historier fra Alumni",y:"insp",p:"tilf",l:"Alumni",k:"SoMe",c:"Oslo"},
+  {m:12,t:"SFMC - Invitasjon Alumni Galla",y:"invit",p:"tilf",l:"Alumni",k:"SFMC",c:"Oslo"}
+];
+
+/*  [[TYPE_CONFIG_JSON]]  —  Task-type styling config.
+ *  Keys must match the "y" field in TASKS.
+ *  Each value: { color, bg, border, label, filterBg, cntBg, cntColor }
+ */
+const TYPE_CONFIG = {
+  kritisk: { color:"#ef4444", bg:"rgba(239,68,68,0.12)", border:"rgba(239,68,68,0.25)", label:"Kritisk info",    filterBg:"#450a0a", cntBg:"#7f1d1d", cntColor:"#fca5a5" },
+  admin:   { color:"#3b82f6", bg:"rgba(59,130,246,0.12)", border:"rgba(59,130,246,0.25)", label:"Administrativt", filterBg:"#172554", cntBg:"#1e3a5f", cntColor:"#93c5fd" },
+  insp:    { color:"#22c55e", bg:"rgba(34,197,94,0.12)",  border:"rgba(34,197,94,0.25)",  label:"Inspirasjon",    filterBg:"#052e16", cntBg:"#14532d", cntColor:"#86efac" },
+  invit:   { color:"#eab308", bg:"rgba(234,179,8,0.12)",  border:"rgba(234,179,8,0.25)",  label:"Invitasjon",     filterBg:"#422006", cntBg:"#713f12", cntColor:"#fde047" }
+};
+
+/*  [[PILAR_CONFIG_JSON]]  —  Strategic-pillar ring config.
+ *  Keys must match the "p" field in TASKS.
+ *  Each value: { color, label, radius (dot placement), ringRadius (outer boundary),
+ *               ringColor, filterBg, cntBg, cntColor }
+ *  Rings are drawn from outermost (highest ringRadius) to innermost.
+ *  Inner circle (center) is fixed at radius 120.
+ */
+const PILAR_CONFIG = {
+  rekr: { color:"#818cf8", label:"Rekruttering", radius:320, ringRadius:360, ringColor:"#6366f1", filterBg:"#1e1b4b", cntBg:"#312e81", cntColor:"#a5b4fc" },
+  ret:  { color:"#2dd4bf", label:"Retention",    radius:240, ringRadius:280, ringColor:"#14b8a6", filterBg:"#042f2e", cntBg:"#134e4a", cntColor:"#5eead4" },
+  tilf: { color:"#fb923c", label:"Tilfredshet",  radius:160, ringRadius:200, ringColor:"#f97316", filterBg:"#431407", cntBg:"#7c2d12", cntColor:"#fdba74" }
+};
+
+/*  [[LIFECYCLE_CONFIG_JSON]]  —  Student lifecycle filter config.
+ *  Keys must match the "l" field in TASKS.
+ *  Use "label" to override display name (e.g. "-" → "Uspesifisert").
+ */
+const LIFECYCLE_CONFIG = {
+  Bachelor:  { color:"#60a5fa", filterBg:"#172554", cntBg:"#1e3a5f", cntColor:"#93c5fd" },
+  Master:    { color:"#a78bfa", filterBg:"#1e1b4b", cntBg:"#312e81", cntColor:"#c4b5fd" },
+  Prospekt:  { color:"#c084fc", filterBg:"#2e1065", cntBg:"#4c1d95", cntColor:"#d8b4fe" },
+  Alumni:    { color:"#fbbf24", filterBg:"#422006", cntBg:"#713f12", cntColor:"#fde68a" },
+  "-":       { color:"#94a3b8", filterBg:"#1e293b", cntBg:"#334155", cntColor:"#cbd5e1", label:"Uspesifisert" }
+};
+
+/*  [[SKIPPED_JSON]]  —  Array of items not placed on wheel.
+ *  Format: [ { title: "Some item", reason: "Missing date field" }, ... ]
+ *  If empty [], the "all placed" fallback row is shown.
+ */
+const SKIPPED = [];
+
+
+/* ===========================================================================
+ *  CONSTANTS & STATE
+ * =========================================================================== */
+const MONTHS = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+const CX = 390, CY = 390, INNER_CIRCLE_R = 120, CENTER_R = 50;
+
+let activeTypes      = new Set(Object.keys(TYPE_CONFIG));
+let activePilars     = new Set(Object.keys(PILAR_CONFIG));
+let activeLifecycles = new Set(Object.keys(LIFECYCLE_CONFIG));
+
+const dotEls = [], tipEls = [];
+
+/* helper: field on task for a given filter dimension */
+const FIELD_MAP = { type: 'y', pilar: 'p', livs: 'l' };
+const CONFIG_MAP = { type: TYPE_CONFIG, pilar: PILAR_CONFIG, livs: LIFECYCLE_CONFIG };
+const SET_MAP   = () => ({ type: activeTypes, pilar: activePilars, livs: activeLifecycles });
+
+/* ===========================================================================
+ *  UTILITIES
+ * =========================================================================== */
+function esc(s) { const e = document.createElement('span'); e.textContent = s || ''; return e.innerHTML; }
+function isVisible(t) { return activeTypes.has(t.y) && activePilars.has(t.p) && activeLifecycles.has(t.l); }
+
+/* ===========================================================================
+ *  DRAW WHEEL (Canvas)
+ * =========================================================================== */
+const canvas = document.getElementById('wc');
+const ctx = canvas.getContext('2d');
+
+function drawWheel() {
+  ctx.clearRect(0, 0, 780, 780);
+  const sorted = Object.entries(PILAR_CONFIG).sort((a, b) => b[1].ringRadius - a[1].ringRadius);
+  const bounds = sorted.map(([, c]) => c.ringRadius).concat([INNER_CIRCLE_R]);
+
+  /* ring fills */
+  ctx.globalAlpha = 0.04;
+  sorted.forEach(([, cfg], i) => {
+    ctx.beginPath(); ctx.arc(CX, CY, cfg.ringRadius, 0, Math.PI * 2);
+    ctx.fillStyle = cfg.ringColor || cfg.color; ctx.fill();
+    ctx.beginPath(); ctx.arc(CX, CY, bounds[i + 1], 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a'; ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  /* ring outlines */
+  bounds.forEach(r => {
+    ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(148,163,184,0.15)'; ctx.lineWidth = 1; ctx.stroke();
+  });
+
+  /* pilar labels inside rings */
+  ctx.font = '600 10px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.4;
+  sorted.forEach(([, cfg], i) => {
+    const innerR = bounds[i + 1];
+    ctx.fillStyle = cfg.color;
+    ctx.fillText(cfg.label.toUpperCase(), CX, CY - (innerR - 48));
+  });
+  ctx.globalAlpha = 1;
+
+  /* month divider lines */
+  const outerR = bounds[0] + 10;
+  for (let i = 0; i < 12; i++) {
+    const a = (i * 30 - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(CX + Math.cos(a) * CENTER_R, CY + Math.sin(a) * CENTER_R);
+    ctx.lineTo(CX + Math.cos(a) * outerR, CY + Math.sin(a) * outerR);
+    ctx.strokeStyle = 'rgba(148,163,184,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  /* center circle */
+  ctx.beginPath(); ctx.arc(CX, CY, CENTER_R, 0, Math.PI * 2);
+  ctx.fillStyle = '#4f46e5'; ctx.fill();
+  ctx.font = '700 16px Inter, sans-serif'; ctx.fillStyle = '#fff';
+  ctx.fillText(YEAR, CX, CY + 5);
+}
+
+/* ===========================================================================
+ *  BUILD DOTS & TOOLTIPS
+ * =========================================================================== */
+function buildDots() {
+  const dc = document.getElementById('dots'), tc = document.getElementById('tips');
+  dc.innerHTML = ''; tc.innerHTML = ''; dotEls.length = 0; tipEls.length = 0;
+
+  const mpc = {}; TASKS.forEach(t => { const k = t.m + '-' + t.p; mpc[k] = (mpc[k] || 0) + 1; });
+  const mpi = {};
+
+  TASKS.forEach((t) => {
+    const k = t.m + '-' + t.p; if (!mpi[k]) mpi[k] = 0;
+    const ig = mpi[k]++, tg = mpc[k];
+    const pilarCfg = PILAR_CONFIG[t.p], typeCfg = TYPE_CONFIG[t.y];
+    if (!pilarCfg || !typeCfg) { dotEls.push(null); tipEls.push(null); return; }
+
+    const br = pilarCfg.radius;
+    const ms = (t.m - 1) * 30 - 90, sp = 26 / (tg + 1);
+    const da = (ms + 2 + sp * (ig + 1)) * Math.PI / 180;
+    const r = br + (ig % 3 - 1) * 18;
+    const px = CX + Math.cos(da) * r - 5, py = CY + Math.sin(da) * r - 5;
+
+    const d = document.createElement('div'); d.className = 'task-dot';
+    d.style.cssText = `left:${px}px;top:${py}px;width:10px;height:10px;background:${typeCfg.color};box-shadow:0 0 8px ${typeCfg.color}66;`;
+
+    const lcCfg = LIFECYCLE_CONFIG[t.l];
+    const tp = document.createElement('div'); tp.className = 'hover-card';
+    tp.innerHTML = `<strong>${esc(t.t)}</strong><br>${esc(typeCfg.label)} | ${esc(pilarCfg.label)}<br>${esc(lcCfg?.label || t.l)} | ${esc(t.k)} | ${esc(t.c)}`;
+    tp.style.cssText = `left:${px + 16}px;top:${py - 10}px;`;
+
+    d.addEventListener('mouseenter', () => { if (!d.classList.contains('dimmed')) tp.classList.add('show'); });
+    d.addEventListener('mouseleave', () => tp.classList.remove('show'));
+    dc.appendChild(d); tc.appendChild(tp); dotEls.push(d); tipEls.push(tp);
+  });
+}
+
+/* ===========================================================================
+ *  HIT AREAS & MONTH LINKS
+ * =========================================================================== */
+function buildHitAreas() {
+  const ha = document.getElementById('hitAreas'); ha.innerHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const amid = ((i * 30 + 15) - 90) * Math.PI / 180;
+    const hx = CX + Math.cos(amid) * 210 - 40, hy = CY + Math.sin(amid) * 210 - 40;
+    const d = document.createElement('div'); d.className = 'month-hit';
+    d.style.cssText = `left:${hx}px;top:${hy}px;width:80px;height:80px;border-radius:50%;`;
+    d.addEventListener('click', () => openZoom(i + 1));
+    ha.appendChild(d);
+  }
+}
+
+function buildMonthLinks() {
+  const ml = document.getElementById('monthLinks'); ml.innerHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const angle = ((i * 30) + 15 - 90) * Math.PI / 180;
+    const lx = CX + Math.cos(angle) * 375, ly = CY + Math.sin(angle) * 375;
+    const mc = TASKS.filter(t => t.m === i + 1 && isVisible(t)).length;
+    const a = document.createElement('a'); a.className = 'month-label-link'; a.href = '#';
+    a.addEventListener('click', e => { e.preventDefault(); openZoom(i + 1); });
+    a.style.cssText = `left:${lx}px;top:${ly}px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;`;
+    a.innerHTML = `<span class="ml-text" style="font-weight:700;font-size:12px;color:var(--color-muted);transition:color .2s;">${MONTHS[i].toUpperCase()}</span>
+      <span class="ml-count" style="font-size:9px;color:var(--color-muted-dim);opacity:.6;transition:opacity .2s;">${mc || ''}</span>`;
+    a.id = `ml${i + 1}`;
+    ml.appendChild(a);
+  }
+}
+
+/* ===========================================================================
+ *  FILTER UI BUILDER
+ * =========================================================================== */
+function buildFilters() {
+  const tb = document.getElementById('filterToolbar'); tb.innerHTML = '';
+  const gd = document.createElement('div'); gd.className = 'filter-groups';
+
+  const dims = [
+    { key: 'type',  label: 'Budskapstype',       config: TYPE_CONFIG },
+    { key: 'pilar', label: 'Strategisk pilar',    config: PILAR_CONFIG },
+    { key: 'livs',  label: 'Student-livssyklus',  config: LIFECYCLE_CONFIG }
+  ];
+
+  dims.forEach(dim => {
+    const g = document.createElement('div'); g.className = 'filter-group';
+    g.innerHTML = `<p class="filter-group-label">${dim.label}</p>`;
+    const bd = document.createElement('div'); bd.className = 'filter-group-buttons';
+
+    /* "All" button */
+    const allB = document.createElement('button'); allB.className = 'fb active';
+    allB.dataset.f = dim.key; allB.dataset.v = 'all';
+    allB.style.cssText = 'background:#1e293b;color:#94a3b8;';
+    allB.onclick = function () { toggleFilter(this); };
+    allB.innerHTML = `Alle<span class="cnt" data-count-key="${dim.key}_all" style="background:#334155;color:#cbd5e1">${TASKS.length}</span>`;
+    bd.appendChild(allB);
+
+    /* Individual buttons */
+    const field = FIELD_MAP[dim.key];
+    Object.entries(dim.config).forEach(([k, cfg]) => {
+      const b = document.createElement('button'); b.className = 'fb active';
+      b.dataset.f = dim.key; b.dataset.v = k;
+      b.style.cssText = `background:${cfg.filterBg};color:${cfg.color};`;
+      b.onclick = function () { toggleFilter(this); };
+      const cnt = TASKS.filter(t => t[field] === k).length;
+      b.innerHTML = `${esc(cfg.label || k)}<span class="cnt" data-count-key="${dim.key}_${k}" style="background:${cfg.cntBg};color:${cfg.cntColor}">${cnt}</span>`;
+      bd.appendChild(b);
+    });
+    g.appendChild(bd); gd.appendChild(g);
+  });
+  tb.appendChild(gd);
+
+  const sm = document.createElement('div'); sm.className = 'filter-summary';
+  sm.innerHTML = `<p>Viser <span class="count" id="vis">${TASKS.length}</span> av ${TASKS.length}</p>
+    <button onclick="resetFilters()">Nullstill</button>`;
+  tb.appendChild(sm);
+}
+
+/* ===========================================================================
+ *  LEGEND BUILDER
+ * =========================================================================== */
+function buildLegend() {
+  const el = document.getElementById('legendSection');
+  if (!TYPE_CONFIG || !Object.keys(TYPE_CONFIG).length) {
+    el.innerHTML = '<span class="legend-item">Ingen kategorier å vise</span>'; return;
+  }
+  el.innerHTML = '';
+  Object.values(TYPE_CONFIG).forEach(cfg => {
+    const it = document.createElement('span'); it.className = 'legend-item';
+    it.innerHTML = `<span class="legend-swatch" style="background:${cfg.color}"></span>${esc(cfg.label)}`;
+    el.appendChild(it);
+  });
+  Object.values(PILAR_CONFIG).forEach(cfg => {
+    const it = document.createElement('span'); it.className = 'legend-item';
+    it.innerHTML = `<span class="legend-swatch" style="background:${cfg.color};border-radius:50%"></span>${esc(cfg.label)}`;
+    el.appendChild(it);
+  });
+}
+
+/* ===========================================================================
+ *  SKIPPED TABLE BUILDER
+ * =========================================================================== */
+function buildSkipped() {
+  const tb = document.getElementById('skippedBody');
+  if (!SKIPPED || !SKIPPED.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="2">Alle elementer er plassert i hjulet</td></tr>'; return;
+  }
+  tb.innerHTML = '';
+  SKIPPED.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${esc(s.title)}</td><td>${esc(s.reason)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ===========================================================================
+ *  FILTER LOGIC
+ * =========================================================================== */
+function applyFilters() {
+  let vc = 0;
+  TASKS.forEach((t, i) => {
+    const v = isVisible(t); if (v) vc++;
+    if (dotEls[i]) { dotEls[i].classList.toggle('dimmed', !v); tipEls[i]?.classList.remove('show'); }
+  });
+  const visEl = document.getElementById('vis');
+  if (visEl) visEl.textContent = vc;
+  document.getElementById('totalPlaced').textContent = vc;
+  updateFilterCounts(vc);
+  for (let i = 0; i < 12; i++) {
+    const mc = TASKS.filter(t => t.m === i + 1 && isVisible(t)).length;
+    const el = document.getElementById(`ml${i + 1}`);
+    if (el) { const cs = el.querySelector('.ml-count'); if (cs) cs.textContent = mc || ''; }
+  }
+}
+
+function updateFilterCounts(total) {
+  const counts = {};
+  TASKS.forEach(t => {
+    if (!isVisible(t)) return;
+    Object.entries(FIELD_MAP).forEach(([dim, field]) => { counts[`${dim}_${t[field]}`] = (counts[`${dim}_${t[field]}`] || 0) + 1; });
+  });
+  document.querySelectorAll('.cnt[data-count-key]').forEach(el => {
+    const k = el.dataset.countKey;
+    el.textContent = k.endsWith('_all') ? total : (counts[k] || 0);
+  });
+}
+
+function toggleFilter(btn) {
+  const fg = btn.dataset.f, v = btn.dataset.v;
+  const sets = SET_MAP();
+  const set = sets[fg], config = CONFIG_MAP[fg], allKeys = Object.keys(config);
+
+  if (v === 'all') {
+    if (allKeys.every(x => set.has(x))) { set.clear(); document.querySelectorAll(`[data-f="${fg}"]`).forEach(b => b.classList.remove('active')); }
+    else { allKeys.forEach(x => set.add(x)); document.querySelectorAll(`[data-f="${fg}"]`).forEach(b => b.classList.add('active')); }
+  } else {
+    if (set.has(v)) { set.delete(v); btn.classList.remove('active'); }
+    else { set.add(v); btn.classList.add('active'); }
+    const ab = document.querySelector(`[data-f="${fg}"][data-v="all"]`);
+    if (allKeys.every(x => set.has(x))) ab?.classList.add('active'); else ab?.classList.remove('active');
+  }
+  applyFilters();
+}
+
+function resetFilters() {
+  activeTypes      = new Set(Object.keys(TYPE_CONFIG));
+  activePilars     = new Set(Object.keys(PILAR_CONFIG));
+  activeLifecycles = new Set(Object.keys(LIFECYCLE_CONFIG));
+  document.querySelectorAll('.fb').forEach(b => b.classList.add('active'));
+  applyFilters();
+}
+
+/* ===========================================================================
+ *  ZOOM
+ * =========================================================================== */
+function openZoom(month) {
+  const items = TASKS.filter(t => t.m === month && isVisible(t));
+  if (!items.length) return;
+
+  const ov = document.getElementById('zoomOverlay');
+  document.getElementById('zoomTitle').textContent = MONTHS[month - 1] + ' ' + YEAR;
+  document.getElementById('zoomSub').textContent = items.length + ' aktivitet' + (items.length > 1 ? 'er' : '');
+  const zC = document.getElementById('zoomCanvas');
+  const dotsC = document.getElementById('zoomDots'), popC = document.getElementById('zoomPopups');
+  const svg = document.getElementById('zoomSvg');
+  dotsC.innerHTML = ''; popC.innerHTML = ''; svg.innerHTML = '';
+  ov.style.display = 'flex';
+  requestAnimationFrame(() => ov.classList.add('show'));
+
+  requestAnimationFrame(() => {
+    const rect = zC.getBoundingClientRect(), W = rect.width, H = rect.height;
+    const ccx = W / 2, ccy = H / 2, maxR = Math.min(W, H) / 2 - 20;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    const a1 = ((month - 1) * 30 - 90) * Math.PI / 180, a2 = (month * 30 - 90) * Math.PI / 180;
+
+    /* slice */
+    const sp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const r1 = maxR * 0.12, r2 = maxR * 0.95;
+    sp.setAttribute('d', `M${ccx+Math.cos(a1)*r1},${ccy+Math.sin(a1)*r1} L${ccx+Math.cos(a1)*r2},${ccy+Math.sin(a1)*r2} A${r2},${r2} 0 0,1 ${ccx+Math.cos(a2)*r2},${ccy+Math.sin(a2)*r2} L${ccx+Math.cos(a2)*r1},${ccy+Math.sin(a2)*r1} A${r1},${r1} 0 0,0 ${ccx+Math.cos(a1)*r1},${ccy+Math.sin(a1)*r1}`);
+    sp.setAttribute('fill', 'rgba(99,102,241,0.06)'); sp.setAttribute('stroke', 'rgba(99,102,241,0.2)'); sp.setAttribute('stroke-width', '1.5');
+    svg.appendChild(sp);
+
+    [0.3, 0.55, 0.75].forEach(f => {
+      const rr = maxR * f, arc = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      arc.setAttribute('d', `M${ccx+Math.cos(a1)*rr},${ccy+Math.sin(a1)*rr} A${rr},${rr} 0 0,1 ${ccx+Math.cos(a2)*rr},${ccy+Math.sin(a2)*rr}`);
+      arc.setAttribute('fill', 'none'); arc.setAttribute('stroke', 'rgba(148,163,184,0.1)'); arc.setAttribute('stroke-width', '1');
+      svg.appendChild(arc);
+    });
+
+    /* pilar labels & ratios */
+    const pilarEntries = Object.entries(PILAR_CONFIG);
+    const ratios = [0.82, 0.58, 0.35];
+    const pilarR = {}; pilarEntries.forEach(([k], i) => { pilarR[k] = ratios[i] || 0.5; });
+    const amid = (a1 + a2) / 2;
+    pilarEntries.forEach(([k, cfg], i) => {
+      const pr = maxR * pilarR[k], txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', ccx + Math.cos(amid) * pr); txt.setAttribute('y', ccy + Math.sin(amid) * pr - 18);
+      txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('fill', cfg.color);
+      txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', '600'); txt.setAttribute('opacity', '0.4');
+      txt.textContent = cfg.label.toUpperCase(); svg.appendChild(txt);
+    });
+
+    /* dots */
+    const dotPos = [], byPilar = {};
+    items.forEach((t, i) => { if (!byPilar[t.p]) byPilar[t.p] = []; byPilar[t.p].push({ task: t, idx: i }); });
+
+    Object.keys(byPilar).forEach(p => {
+      const grp = byPilar[p], baseR = maxR * (pilarR[p] || 0.5);
+      const aStart = (month - 1) * 30 - 90 + 1, spacing = 28 / (grp.length + 1);
+      grp.forEach((item, gi) => {
+        const ang = (aStart + spacing * (gi + 1)) * Math.PI / 180;
+        const r = baseR + (gi % 2 === 0 ? -12 : 12);
+        const dx = ccx + Math.cos(ang) * r, dy = ccy + Math.sin(ang) * r;
+        dotPos.push({ x: dx, y: dy, task: item.task });
+        const tc = TYPE_CONFIG[item.task.y], dot = document.createElement('div');
+        dot.className = 'zoom-dot';
+        dot.style.cssText = `left:${dx-7}px;top:${dy-7}px;width:14px;height:14px;background:${tc.color};box-shadow:0 0 16px ${tc.color}88;`;
+        dotsC.appendChild(dot);
+      });
+    });
+
+    /* popups with collision avoidance */
+    const popW = 220, popH = 58, used = [];
+    function overlaps(rx, ry, rw, rh) { for (const u of used) { if (!(rx+rw<u.x||rx>u.x+u.w||ry+rh<u.y||ry>u.y+u.h)) return true; } return false; }
+
+    dotPos.forEach(dp => {
+      const offsets = [{ox:30,oy:-popH/2},{ox:-popW-30,oy:-popH/2},{ox:-popW/2,oy:-popH-25},{ox:-popW/2,oy:25},{ox:50,oy:-popH-10},{ox:50,oy:20},{ox:-popW-50,oy:-popH-10},{ox:-popW-50,oy:20},{ox:80,oy:-popH/2},{ox:-popW-80,oy:-popH/2},{ox:30,oy:-popH-40},{ox:30,oy:40},{ox:-popW/2,oy:-popH-50},{ox:-popW/2,oy:55},{ox:100,oy:-10},{ox:-popW-100,oy:-10}];
+      let px = dp.x + 30, py = dp.y - popH / 2;
+      for (const o of offsets) {
+        const tx = dp.x + o.ox, ty = dp.y + o.oy;
+        if (tx > 5 && tx + popW < W - 5 && ty > 5 && ty + popH < H - 5 && !overlaps(tx, ty, popW, popH)) { px = tx; py = ty; break; }
+      }
+      used.push({ x: px, y: py, w: popW, h: popH });
+
+      const t = dp.task, tc = TYPE_CONFIG[t.y], pc = PILAR_CONFIG[t.p], lc = LIFECYCLE_CONFIG[t.l];
+      const pop = document.createElement('div'); pop.className = 'zoom-popup';
+      pop.style.cssText = `left:${px}px;top:${py}px;width:${popW}px;background:${tc.bg};border-color:${tc.border};`;
+      pop.innerHTML = `<div style="color:${tc.color};font-weight:700;font-size:13px;margin-bottom:2px;">${esc(t.t)}</div>
+        <div style="color:rgba(226,232,240,0.7);font-size:11px;">${esc(pc.label)} <span class="badge-sm" style="background:${tc.border};color:${tc.color}">${esc(lc?.label||t.l)}</span> <span style="color:rgba(148,163,184,0.6)">via ${esc(t.k)}</span></div>`;
+      popC.appendChild(pop);
+
+      const pcx = px + (dp.x < px ? 0 : popW), pcy = py + popH / 2;
+      if (Math.sqrt((pcx-dp.x)**2 + (pcy-dp.y)**2) > 35) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', dp.x); line.setAttribute('y1', dp.y);
+        line.setAttribute('x2', pcx); line.setAttribute('y2', pcy);
+        line.setAttribute('stroke', tc.color); line.setAttribute('stroke-width', '1');
+        line.setAttribute('stroke-opacity', '0.3'); line.setAttribute('stroke-dasharray', '4,3');
+        svg.appendChild(line);
+      }
+    });
+  });
+}
+
+function closeZoom() {
+  const ov = document.getElementById('zoomOverlay');
+  ov.classList.remove('show');
+  setTimeout(() => { ov.style.display = 'none'; }, 400);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
+
+/* ===========================================================================
+ *  INIT
+ * =========================================================================== */
+function init() {
+  document.getElementById('yearDisplay').textContent = YEAR;
+  document.getElementById('viewName').textContent = SAVED_VIEW_NAME;
+  document.getElementById('footerTimestamp').textContent = TIMESTAMP;
+  document.getElementById('totalItems').textContent = TASKS.length;
+
+  drawWheel();
+  buildDots();
+  buildHitAreas();
+  buildMonthLinks();
+  buildFilters();
+  buildLegend();
+  buildSkipped();
+  applyFilters();
+}
+init();
+</script>
+</body>
+</html>
